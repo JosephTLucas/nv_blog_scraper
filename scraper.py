@@ -69,7 +69,9 @@ def fetch_and_save_post(driver, url, index=0):
             EC.element_to_be_clickable((By.XPATH, "//button[text()='Agree']"))
         )
         print("Clicking 'Agree' on cookie banner...")
-        agree_button.click()
+        driver.execute_script("arguments[0].scrollIntoView(true);", agree_button)
+        time.sleep(0.5)
+        driver.execute_script("arguments[0].click();", agree_button)
         time.sleep(1)
     except Exception as e:
         print(f"No cookie banner found or error clicking it: {e}")
