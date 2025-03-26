@@ -26,25 +26,37 @@ def setup_driver():
     service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
-def load_all_blog_links(driver):
+
+def load_all_blog_links(driver, max_clicks=20):
+    print("Navigating to author page...")
     driver.get(AUTHOR_PAGE)
     time.sleep(3)
 
-    while True:
+    clicks = 0
+    while clicks < max_clicks:
         try:
             load_more = driver.find_element(By.XPATH, "//button[contains(text(), 'Load more')]")
+            print(f"Clicking 'Load more' ({clicks + 1}/{max_clicks})...")
             driver.execute_script("arguments[0].click();", load_more)
             time.sleep(2)
+            clicks += 1
         except NoSuchElementException:
+            print("No more 'Load more' button found.")
             break
+    else:
+        print("Reached max click limit. Some posts may not have loaded.")
 
+    print("Parsing page for blog links...")
     soup = BeautifulSoup(driver.page_source, "html.parser")
     links = set()
     for a in soup.select("a[href^='/blog/']"):
         href = a['href']
         if "/blog/" in href and not href.startswith("/blog/author"):
             links.add(BASE_URL + href)
+
+    print(f"Found {len(links)} blog posts.")
     return sorted(links)
+
 
 def fetch_and_save_post(url):
     res = requests.get(url)
