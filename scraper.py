@@ -10,6 +10,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 BASE_URL = "https://developer.nvidia.com"
 AUTHOR_PAGE = "https://developer.nvidia.com/blog/author/jolucas/"
@@ -61,7 +63,14 @@ def load_all_blog_links(driver, max_clicks=20):
 def fetch_and_save_post(driver, url):
     print(f"Archiving: {url}")
     driver.get(url)
-    time.sleep(2)  # give it a second to render
+    try:
+        # Wait for the blog post body to load
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "field--name-body"))
+        )
+    except:
+        print(f"Timed out waiting for content: {url}")
+        return
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
