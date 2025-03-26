@@ -49,10 +49,10 @@ def load_all_blog_links(driver, max_clicks=20):
     print("Parsing page for blog links...")
     soup = BeautifulSoup(driver.page_source, "html.parser")
     links = set()
-    for a in soup.select("a[href^='/blog/']"):
-        href = a['href']
-        if "/blog/" in href and not href.startswith("/blog/author"):
-            links.add(BASE_URL + href)
+    for card in soup.select(".post-card a.post--image"):
+        href = card.get("href")
+        if href:
+            links.add(href)
 
     print(f"Found {len(links)} blog posts.")
     return sorted(links)
