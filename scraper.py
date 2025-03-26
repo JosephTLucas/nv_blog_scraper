@@ -64,17 +64,28 @@ def fetch_and_save_post(driver, url, index=0):
     print(f"Archiving: {url}")
     driver.get(url)
 
+    # Try to accept cookies
+    try:
+        agree_button = WebDriverWait(driver, 3).until(
+            EC.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'Agree')]"))
+        )
+        print("Clicking 'Agree' on cookie banner...")
+        agree_button.click()
+        time.sleep(1)
+    except:
+        print("No cookie banner found or already accepted.")
+
+    # Now wait for post content
     try:
         WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.TAG_NAME, "h1"))
+            EC.presence_of_element_located((By.CLASS_NAME, "field--name-body"))
         )
     except:
-        print(f"Timed out waiting for <h1>: {url}")
+        print(f"Timed out waiting for content: {url}")
         driver.save_screenshot(f"debug_{index}.png")
         return
 
     driver.save_screenshot(f"debug_{index}.png")
-
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
     title_tag = soup.find("h1")
