@@ -2,8 +2,8 @@ name: Archive NVIDIA Blogs
 
 on:
   schedule:
-    - cron: '0 0 * * 1' # Weekly on Monday
-  workflow_dispatch:
+    - cron: '0 0 * * 1'  # Every Monday
+  workflow_dispatch:       # Manual trigger
 
 jobs:
   archive:
@@ -19,24 +19,14 @@ jobs:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Run scraper
         run: python scraper.py
 
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git add posts/
-          git diff --quiet || git commit -m "Archived blog posts update"
-          git push
-          
       - name: Upload debug screenshots (if any)
         if: always()
         uses: actions/upload-artifact@v3
         with:
           name: debug-screenshots
           path: "*.png"
-
