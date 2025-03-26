@@ -90,6 +90,7 @@ def main():
     try:
         links = load_all_blog_links(driver)
         for url in links:
+            print(f"({i}/{len(links)}) Archiving: {url}")
             fetch_and_save_post(url)
     finally:
         driver.quit()
