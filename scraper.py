@@ -58,21 +58,29 @@ def load_all_blog_links(driver, max_clicks=20):
     return sorted(links)
 
 
-def fetch_and_save_post(url):
-    res = requests.get(url)
-    soup = BeautifulSoup(res.text, "html.parser")
+def fetch_and_save_post(driver, url):
+    print(f"Archiving: {url}")
+    driver.get(url)
+    time.sleep(2)  # give it a second to render
 
-    title = soup.find("h1").get_text(strip=True)
-    date_str = soup.select_one("div.blog-post--meta time").get_text(strip=True)
-    date = datetime.strptime(date_str, "%B %d, %Y").date()
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+
+    title_tag = soup.find("h1")
+    date_tag = soup.select_one("div.blog-post--meta time")
     content_div = soup.find("div", class_="field--name-body")
-    if not content_div:
-        print(f"Skipping (no content): {url}")
+
+    if not title_tag or not date_tag or not content_div:
+        print(f"Skipping (missing fields): {url}")
         return
+
+    title = title_tag.get_text(strip=True)
+    date_str = date_tag.get_text(strip=True)
+    date = datetime.strptime(date_str, "%B %d, %Y").date()
 
     slug = slugify(title)
     filename = f"{date.isoformat()}-{slug}.md"
     filepath = os.path.join(OUTPUT_DIR, filename)
+
     if os.path.exists(filepath):
         print(f"Already archived: {filename}")
         return
@@ -84,6 +92,7 @@ def fetch_and_save_post(url):
 
     print(f"Archived: {filename}")
 
+
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     driver = setup_driver()
@@ -91,7 +100,7 @@ def main():
         links = load_all_blog_links(driver)
         for i,url in enumerate(links):
             print(f"({i}/{len(links)}) Archiving: {url}")
-            fetch_and_save_post(url)
+            fetch_and_save_post(driver, url)
     finally:
         driver.quit()
 
