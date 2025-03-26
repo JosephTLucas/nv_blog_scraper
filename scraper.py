@@ -89,7 +89,7 @@ def main():
     driver = setup_driver()
     try:
         links = load_all_blog_links(driver)
-        for url in links:
+        for i,url in enumerate(links):
             print(f"({i}/{len(links)}) Archiving: {url}")
             fetch_and_save_post(url)
     finally:
