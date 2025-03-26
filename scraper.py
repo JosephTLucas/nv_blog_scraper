@@ -59,43 +59,18 @@ def load_all_blog_links(driver, max_clicks=20):
     print(f"Found {len(links)} blog posts.")
     return sorted(links)
 
-def fetch_and_save_post(driver, url, index=0):
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+}
+
+def fetch_and_save_post(url):
     print(f"Archiving: {url}")
-    driver.get(url)
-
-    # Try to accept cookies
-    try:
-        agree_button = WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable((By.XPATH, "//button[text()='Agree']"))
-        )
-        print("Clicking 'Agree' on cookie banner...")
-        driver.execute_script("arguments[0].scrollIntoView(true);", agree_button)
-        time.sleep(0.5)
-        driver.execute_script("arguments[0].click();", agree_button)
-        print("Clicked. Waiting for cookie banner to disappear...")
-        time.sleep(2)
-
-        print("Reloading page after accepting cookies...")
-        driver.refresh()
-        time.sleep(3)
-    except Exception as e:
-        print(f"No cookie banner found or error clicking it: {e}")
-
-    # Wait for content
-    try:
-        WebDriverWait(driver, 10).until(
-            lambda d: d.execute_script("return document.readyState") == "complete"
-        )
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "field--name-body"))
-        )
-    except Exception as e:
-        print(f"Timed out waiting for content: {url}")
-        driver.save_screenshot(f"debug_{index}.png")
+    res = requests.get(url, headers=HEADERS)
+    if res.status_code != 200:
+        print(f"Failed to fetch {url} (status: {res.status_code})")
         return
 
-    driver.save_screenshot(f"debug_{index}.png")
-    soup = BeautifulSoup(driver.page_source, "html.parser")
+    soup = BeautifulSoup(res.text, "html.parser")
 
     title_tag = soup.find("h1")
     date_tag = soup.select_one("div.blog-post--meta time")
@@ -107,11 +82,15 @@ def fetch_and_save_post(driver, url, index=0):
 
     title = title_tag.get_text(strip=True)
     date_str = date_tag.get_text(strip=True)
-    date = datetime.strptime(date_str, "%B %d, %Y").date()
+    try:
+        date = datetime.strptime(date_str, "%B %d, %Y").date()
+    except ValueError:
+        print(f"Invalid date format: {date_str}")
+        return
 
-    slug = slugify(title)
+    slug = "".join(c if c.isalnum() else "-" for c in title.lower()).strip("-")
     filename = f"{date.isoformat()}-{slug}.md"
-    filepath = os.path.join(OUTPUT_DIR, filename)
+    filepath = os.path.join("posts", filename)
 
     if os.path.exists(filepath):
         print(f"Already archived: {filename}")
@@ -132,7 +111,7 @@ def main():
         links = load_all_blog_links(driver)
         for i, url in enumerate(links):
             print(f"({i}/{len(links)}) Archiving: {url}")
-            fetch_and_save_post(driver, url, i)
+            fetch_and_save_post(url)
 
     finally:
         driver.quit()
