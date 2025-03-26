@@ -72,15 +72,21 @@ def fetch_and_save_post(driver, url, index=0):
         driver.execute_script("arguments[0].scrollIntoView(true);", agree_button)
         time.sleep(0.5)
         driver.execute_script("arguments[0].click();", agree_button)
-        time.sleep(1)
+        print("Clicked. Waiting for cookie banner to disappear...")
+        time.sleep(2)
+
     except Exception as e:
         print(f"No cookie banner found or error clicking it: {e}")
 
     # Wait for blog content to load
     try:
         WebDriverWait(driver, 10).until(
+            lambda d: d.execute_script("return document.readyState") == "complete"
+        )
+        WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "field--name-body"))
         )
+
     except Exception as e:
         print(f"Timed out waiting for content: {url}")
         driver.save_screenshot(f"debug_{index}.png")
