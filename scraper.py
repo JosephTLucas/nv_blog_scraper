@@ -1,4 +1,4 @@
-# scraper.py
+# Updated scraper.py using webdriver-manager for robust chromedriver handling
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -6,8 +6,10 @@ from datetime import datetime
 import time
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from webdriver_manager.chrome import ChromeDriverManager
 
 BASE_URL = "https://developer.nvidia.com"
 AUTHOR_PAGE = "https://developer.nvidia.com/blog/author/jolucas/"
@@ -21,7 +23,8 @@ def setup_driver():
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    return webdriver.Chrome(options=options)
+    service = Service(ChromeDriverManager().install())
+    return webdriver.Chrome(service=service, options=options)
 
 def load_all_blog_links(driver):
     driver.get(AUTHOR_PAGE)
