@@ -1,4 +1,5 @@
 name: Archive NVIDIA Blogs
+
 permissions:
   contents: write
 
@@ -36,3 +37,4 @@ jobs:
           else
             git commit -m "Archive update: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
             git push
+          fi
