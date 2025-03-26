@@ -60,17 +60,20 @@ def load_all_blog_links(driver, max_clicks=20):
     return sorted(links)
 
 
-def fetch_and_save_post(driver, url):
+def fetch_and_save_post(driver, url, index=0):
     print(f"Archiving: {url}")
     driver.get(url)
+
     try:
-        # Wait for the blog post body to load
         WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "field--name-body"))
+            EC.presence_of_element_located((By.TAG_NAME, "h1"))
         )
     except:
-        print(f"Timed out waiting for content: {url}")
+        print(f"Timed out waiting for <h1>: {url}")
+        driver.save_screenshot(f"debug_{index}.png")
         return
+
+    driver.save_screenshot(f"debug_{index}.png")
 
     soup = BeautifulSoup(driver.page_source, "html.parser")
 
@@ -102,14 +105,16 @@ def fetch_and_save_post(driver, url):
     print(f"Archived: {filename}")
 
 
+
 def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     driver = setup_driver()
     try:
         links = load_all_blog_links(driver)
-        for i,url in enumerate(links):
+        for i, url in enumerate(links):
             print(f"({i}/{len(links)}) Archiving: {url}")
-            fetch_and_save_post(driver, url)
+            fetch_and_save_post(driver, url, i)
+
     finally:
         driver.quit()
 

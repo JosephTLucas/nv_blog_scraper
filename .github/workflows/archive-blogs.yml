@@ -32,3 +32,11 @@ jobs:
           git add posts/
           git diff --quiet || git commit -m "Archived blog posts update"
           git push
+          
+      - name: Upload debug screenshots (if any)
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: debug-screenshots
+          path: "*.png"
+
