@@ -63,7 +63,7 @@ def fetch_and_save_post(driver, url, index=0):
     print(f"Archiving: {url}")
     driver.get(url)
 
-    # Handle cookie banner
+    # Try to accept cookies
     try:
         agree_button = WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable((By.XPATH, "//button[text()='Agree']"))
@@ -75,10 +75,13 @@ def fetch_and_save_post(driver, url, index=0):
         print("Clicked. Waiting for cookie banner to disappear...")
         time.sleep(2)
 
+        print("Reloading page after accepting cookies...")
+        driver.refresh()
+        time.sleep(3)
     except Exception as e:
         print(f"No cookie banner found or error clicking it: {e}")
 
-    # Wait for blog content to load
+    # Wait for content
     try:
         WebDriverWait(driver, 10).until(
             lambda d: d.execute_script("return document.readyState") == "complete"
@@ -86,7 +89,6 @@ def fetch_and_save_post(driver, url, index=0):
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "field--name-body"))
         )
-
     except Exception as e:
         print(f"Timed out waiting for content: {url}")
         driver.save_screenshot(f"debug_{index}.png")
