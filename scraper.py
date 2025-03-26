@@ -59,28 +59,27 @@ def load_all_blog_links(driver, max_clicks=20):
     print(f"Found {len(links)} blog posts.")
     return sorted(links)
 
-
 def fetch_and_save_post(driver, url, index=0):
     print(f"Archiving: {url}")
     driver.get(url)
 
-    # Try to accept cookies
+    # Handle cookie banner
     try:
-        agree_button = WebDriverWait(driver, 3).until(
-            EC.element_to_be_clickable((By.XPATH, "//a[contains(text(), 'Agree')]"))
+        agree_button = WebDriverWait(driver, 5).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[text()='Agree']"))
         )
         print("Clicking 'Agree' on cookie banner...")
         agree_button.click()
         time.sleep(1)
-    except:
-        print("No cookie banner found or already accepted.")
+    except Exception as e:
+        print(f"No cookie banner found or error clicking it: {e}")
 
-    # Now wait for post content
+    # Wait for blog content to load
     try:
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.CLASS_NAME, "field--name-body"))
         )
-    except:
+    except Exception as e:
         print(f"Timed out waiting for content: {url}")
         driver.save_screenshot(f"debug_{index}.png")
         return
@@ -114,7 +113,6 @@ def fetch_and_save_post(driver, url, index=0):
         f.write(content_div.get_text("\n", strip=True))
 
     print(f"Archived: {filename}")
-
 
 
 def main():
